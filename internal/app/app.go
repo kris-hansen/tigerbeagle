@@ -13,6 +13,15 @@ import (
 	tbTypes "github.com/tigerbeetle/tigerbeetle-go/pkg/types"
 )
 
+type TigerBeagleInterface interface {
+	ValidateConnectivity() error
+	CreateAccount(id uint64) error
+	GetAccount(id uint64) (*models.Account, error)
+	Transfer(debitAccountID, creditAccountID, amount uint64) error
+}
+
+var _ TigerBeagleInterface = (*TigerBeagle)(nil)
+
 type TigerBeagle struct {
 	client tigerbeetle.Client
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newDoctorCmd(tigerBeagle *app.TigerBeagle) *cobra.Command {
+func newDoctorCmd(tigerBeagle app.TigerBeagleInterface) *cobra.Command {
 	var attempts int
 	var timeoutPerAttempt int
 
@@ -23,7 +23,7 @@ func newDoctorCmd(tigerBeagle *app.TigerBeagle) *cobra.Command {
 			ctx, cancel := context.WithTimeout(cmd.Context(), totalTimeout)
 			defer cancel()
 
-			fmt.Printf("Attempting to connect to TigerBeetle (timeout: %s)\n", totalTimeout)
+			fmt.Fprintf(cmd.OutOrStdout(), "Attempting to connect to TigerBeetle (timeout: %s)\n", totalTimeout)
 
 			errChan := make(chan error, 1)
 			go func() {
@@ -33,23 +33,23 @@ func newDoctorCmd(tigerBeagle *app.TigerBeagle) *cobra.Command {
 			select {
 			case err := <-errChan:
 				if err == nil {
-					fmt.Println("Successfully connected to TigerBeetle")
+					fmt.Fprintln(cmd.OutOrStdout(), "Successfully connected to TigerBeetle")
 					return nil
 				}
 				errStr := err.Error()
 				switch {
 				case strings.Contains(errStr, "client version is too old"):
-					fmt.Println("Connection failed: Client version is too old")
-					fmt.Println("Please update your TigerBeetle client")
-					fmt.Printf("Error details: %v\n", err)
+					fmt.Fprintln(cmd.OutOrStdout(), "Connection failed: Client version is too old")
+					fmt.Fprintln(cmd.OutOrStdout(), "Please update your TigerBeetle client")
+					fmt.Fprintf(cmd.OutOrStdout(), "Error details: %v\n", err)
 					return fmt.Errorf("connection failed due to outdated client version")
 				case strings.Contains(errStr, "session was evicted"):
-					fmt.Println("Connection failed: Session was evicted")
-					fmt.Println("This might be due to a version mismatch or other issues")
-					fmt.Printf("Error details: %v\n", err)
+					fmt.Fprintln(cmd.OutOrStdout(), "Connection failed: Session was evicted")
+					fmt.Fprintln(cmd.OutOrStdout(), "This might be due to a version mismatch or other issues")
+					fmt.Fprintf(cmd.OutOrStdout(), "Error details: %v\n", err)
 					return fmt.Errorf("connection failed due to session eviction")
 				default:
-					fmt.Printf("Failed to connect to TigerBeetle: %v\n", err)
+					fmt.Fprintf(cmd.OutOrStdout(), "Failed to connect to TigerBeetle: %v\n", err)
 					return fmt.Errorf("connection failed")
 				}
 			case <-ctx.Done():
