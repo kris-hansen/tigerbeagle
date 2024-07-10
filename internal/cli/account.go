@@ -6,6 +6,7 @@ import (
 
 	"github.com/kris-hansen/tigerbeagle/internal/app"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func newCreateAccountCmd(tigerBeagle *app.TigerBeagle) *cobra.Command {
@@ -18,7 +19,10 @@ func newCreateAccountCmd(tigerBeagle *app.TigerBeagle) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("invalid account number: %w", err)
 			}
-			return tigerBeagle.CreateAccount(id)
+			ledger := viper.GetUint32("ledger")
+			code := uint16(viper.GetUint32("code"))
+			flags := uint16(viper.GetUint32("flags"))
+			return tigerBeagle.CreateAccount(id, ledger, code, flags)
 		},
 	}
 }

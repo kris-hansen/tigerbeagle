@@ -15,9 +15,14 @@ import (
 
 type TigerBeagleInterface interface {
 	ValidateConnectivity() error
-	CreateAccount(id uint64) error
+	CreateAccount(id uint64, ledger uint32, code uint16, flags uint16) error
 	GetAccount(id uint64) (*models.Account, error)
-	Transfer(debitAccountID, creditAccountID, amount uint64) error
+	Transfer(debitAccountID, creditAccountID, amount uint64, ledger uint32, code uint16, flags uint16) error
+	BulkTransfer(iterations int, debitAccountID, creditAccountID, amount uint64, ledger uint32, code uint16, flags uint16) error
+	GenerateAccounts(number int, ledger uint32, code uint16, flags uint16) error
+	GenerateTransfers(number int, ledger uint32, code uint16, flags uint16) error
+	MigrateAccounts(filename string) error
+	MigrateTransfers(filename string) error
 }
 
 var _ TigerBeagleInterface = (*TigerBeagle)(nil)
@@ -45,7 +50,7 @@ func (t *TigerBeagle) CloseClient() {
 	}
 }
 
-func (t *TigerBeagle) CreateAccount(id uint64) error {
+func (t *TigerBeagle) CreateAccount(id uint64, ledger uint32, code uint16, flags uint16) error {
 	account := models.Account{
 		ID:             tbTypes.ToUint128(id),
 		DebitsPending:  tbTypes.ToUint128(0),
@@ -53,9 +58,9 @@ func (t *TigerBeagle) CreateAccount(id uint64) error {
 		CreditsPending: tbTypes.ToUint128(0),
 		CreditsPosted:  tbTypes.ToUint128(0),
 		UserID:         tbTypes.ToUint128(0),
-		Ledger:         1,
-		Code:           718,
-		Flags:          1,
+		Ledger:         ledger,
+		Code:           code,
+		Flags:          flags,
 	}
 
 	err := t.client.CreateAccounts([]models.Account{account})
@@ -63,7 +68,7 @@ func (t *TigerBeagle) CreateAccount(id uint64) error {
 		return fmt.Errorf("error creating account: %w", err)
 	}
 
-	fmt.Printf("Account created with ID: %d\n", id)
+	fmt.Printf("Account created with ID: %d, Ledger: %d, Code: %d, Flags: %d\n", id, ledger, code, flags)
 	return nil
 }
 
@@ -75,14 +80,15 @@ func (t *TigerBeagle) GetAccount(id uint64) (*models.Account, error) {
 	return account, nil
 }
 
-func (t *TigerBeagle) Transfer(debitAccountID, creditAccountID, amount uint64) error {
+func (t *TigerBeagle) Transfer(debitAccountID, creditAccountID, amount uint64, ledger uint32, code uint16, flags uint16) error {
 	transfer := models.Transfer{
 		ID:              tbTypes.ToUint128(uint64(time.Now().UnixNano())),
 		DebitAccountID:  tbTypes.ToUint128(debitAccountID),
 		CreditAccountID: tbTypes.ToUint128(creditAccountID),
 		Amount:          tbTypes.ToUint128(amount),
-		Ledger:          1,
-		Code:            1,
+		Ledger:          ledger,
+		Code:            code,
+		Flags:           flags,
 	}
 
 	err := t.client.CreateTransfers([]models.Transfer{transfer})
@@ -90,19 +96,21 @@ func (t *TigerBeagle) Transfer(debitAccountID, creditAccountID, amount uint64) e
 		return fmt.Errorf("error creating transfer: %w", err)
 	}
 
-	fmt.Printf("Transfer completed: %d from account %d to account %d\n", amount, debitAccountID, creditAccountID)
+	fmt.Printf("Transfer completed: %d from account %d to account %d (Ledger: %d, Code: %d, Flags: %d)\n",
+		amount, debitAccountID, creditAccountID, ledger, code, flags)
 	return nil
 }
 
-func (t *TigerBeagle) BulkTransfer(iterations int, debitAccountID, creditAccountID, amount uint64) error {
+func (t *TigerBeagle) BulkTransfer(iterations int, debitAccountID, creditAccountID, amount uint64, ledger uint32, code uint16, flags uint16) error {
 	for i := 0; i < iterations; i++ {
 		transfer := models.Transfer{
 			ID:              tbTypes.ToUint128(uint64(time.Now().UnixNano()) + uint64(i)),
 			DebitAccountID:  tbTypes.ToUint128(debitAccountID),
 			CreditAccountID: tbTypes.ToUint128(creditAccountID),
 			Amount:          tbTypes.ToUint128(amount),
-			Ledger:          1,
-			Code:            1,
+			Ledger:          ledger,
+			Code:            code,
+			Flags:           flags,
 		}
 
 		err := t.client.CreateTransfers([]models.Transfer{transfer})
@@ -110,7 +118,8 @@ func (t *TigerBeagle) BulkTransfer(iterations int, debitAccountID, creditAccount
 			return fmt.Errorf("error creating transfer in iteration %d: %w", i, err)
 		}
 
-		fmt.Printf("Transfer %d completed: %d from account %d to account %d\n", i+1, amount, debitAccountID, creditAccountID)
+		fmt.Printf("Transfer %d completed: %d from account %d to account %d (Ledger: %d, Code: %d, Flags: %d)\n",
+			i+1, amount, debitAccountID, creditAccountID, ledger, code, flags)
 	}
 
 	return nil
@@ -172,37 +181,38 @@ func (t *TigerBeagle) ValidateConnectivity() error {
 	return nil
 }
 
-func (t *TigerBeagle) GenerateAccounts(number int) error {
+func (t *TigerBeagle) GenerateAccounts(number int, ledger uint32, code uint16, flags uint16) error {
 	accounts := make([]models.Account, number)
 	for i := 0; i < number; i++ {
 		accounts[i] = models.Account{
-			ID:             tbTypes.ToUint128(uint64(i + 1)),
+			ID:             tbTypes.ToUint128(uint64(1000 + i)), // Start from 1000 as in your manual example
 			DebitsPending:  tbTypes.ToUint128(0),
 			DebitsPosted:   tbTypes.ToUint128(0),
 			CreditsPending: tbTypes.ToUint128(0),
 			CreditsPosted:  tbTypes.ToUint128(0),
 			UserID:         tbTypes.ToUint128(0),
-			Ledger:         1,
-			Code:           718,
-			Flags:          1,
+			Ledger:         ledger,
+			Code:           code,
+			Flags:          flags,
 		}
 	}
 
 	return writeJSONToFile(accounts, "generated_accounts.json")
 }
 
-func (t *TigerBeagle) GenerateTransfers(number int) error {
+func (t *TigerBeagle) GenerateTransfers(number int, ledger uint32, code uint16, flags uint16) error {
 	transfers := make([]models.Transfer, number)
 	rand.Seed(time.Now().UnixNano())
 
 	for i := 0; i < number; i++ {
 		transfers[i] = models.Transfer{
 			ID:              tbTypes.ToUint128(uint64(i + 1)),
-			DebitAccountID:  tbTypes.ToUint128(uint64(rand.Intn(number) + 1)),
-			CreditAccountID: tbTypes.ToUint128(uint64(rand.Intn(number) + 1)),
+			DebitAccountID:  tbTypes.ToUint128(uint64(rand.Intn(number) + 1000)),
+			CreditAccountID: tbTypes.ToUint128(uint64(rand.Intn(number) + 1000)),
 			Amount:          tbTypes.ToUint128(uint64(rand.Intn(10000) + 1)),
-			Ledger:          1,
-			Code:            1,
+			Ledger:          ledger,
+			Code:            code,
+			Flags:           flags,
 		}
 	}
 
