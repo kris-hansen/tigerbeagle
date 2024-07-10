@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"math/big"
 
@@ -17,6 +18,63 @@ type Account struct {
 	DebitsPosted   types.Uint128
 	CreditsPending types.Uint128
 	CreditsPosted  types.Uint128
+}
+
+// SetID sets the ID of the account using a uint64 value
+func (a *Account) SetID(id uint64) {
+	a.ID = types.ToUint128(id)
+}
+
+func (a Account) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		ID             uint64 `json:"id"`
+		UserID         uint64 `json:"user_id"`
+		Ledger         uint32 `json:"ledger"`
+		Code           uint16 `json:"code"`
+		Flags          uint16 `json:"flags"`
+		DebitsPending  uint64 `json:"debits_pending"`
+		DebitsPosted   uint64 `json:"debits_posted"`
+		CreditsPending uint64 `json:"credits_pending"`
+		CreditsPosted  uint64 `json:"credits_posted"`
+	}{
+		ID:             uint64FromUint128(a.ID),
+		UserID:         uint64FromUint128(a.UserID),
+		Ledger:         a.Ledger,
+		Code:           a.Code,
+		Flags:          a.Flags,
+		DebitsPending:  uint64FromUint128(a.DebitsPending),
+		DebitsPosted:   uint64FromUint128(a.DebitsPosted),
+		CreditsPending: uint64FromUint128(a.CreditsPending),
+		CreditsPosted:  uint64FromUint128(a.CreditsPosted),
+	})
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface
+func (a *Account) UnmarshalJSON(data []byte) error {
+	aux := &struct {
+		ID             uint64 `json:"id"`
+		UserID         uint64 `json:"user_id"`
+		Ledger         uint32 `json:"ledger"`
+		Code           uint16 `json:"code"`
+		Flags          uint16 `json:"flags"`
+		DebitsPending  uint64 `json:"debits_pending"`
+		DebitsPosted   uint64 `json:"debits_posted"`
+		CreditsPending uint64 `json:"credits_pending"`
+		CreditsPosted  uint64 `json:"credits_posted"`
+	}{}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	a.ID = types.ToUint128(aux.ID)
+	a.UserID = types.ToUint128(aux.UserID)
+	a.Ledger = aux.Ledger
+	a.Code = aux.Code
+	a.Flags = aux.Flags
+	a.DebitsPending = types.ToUint128(aux.DebitsPending)
+	a.DebitsPosted = types.ToUint128(aux.DebitsPosted)
+	a.CreditsPending = types.ToUint128(aux.CreditsPending)
+	a.CreditsPosted = types.ToUint128(aux.CreditsPosted)
+	return nil
 }
 
 type AccountBalances struct {
@@ -81,7 +139,6 @@ func uint64FromUint128(u types.Uint128) uint64 {
 	return bigInt.Uint64()
 }
 
-// Add this function
 func FromTigerBeetleAccount(tba types.Account) *Account {
 	return &Account{
 		ID:             tba.ID,
