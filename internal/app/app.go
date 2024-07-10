@@ -10,6 +10,7 @@ import (
 
 	"github.com/kris-hansen/tigerbeagle/internal/tigerbeetle"
 	"github.com/kris-hansen/tigerbeagle/pkg/models"
+	"github.com/tigerbeetle/tigerbeetle-go/pkg/types"
 	tbTypes "github.com/tigerbeetle/tigerbeetle-go/pkg/types"
 )
 
@@ -184,17 +185,18 @@ func (t *TigerBeagle) ValidateConnectivity() error {
 func (t *TigerBeagle) GenerateAccounts(number int, ledger uint32, code uint16, flags uint16) error {
 	accounts := make([]models.Account, number)
 	for i := 0; i < number; i++ {
-		accounts[i] = models.Account{
-			ID:             tbTypes.ToUint128(uint64(1000 + i)), // Start from 1000 as in your manual example
-			DebitsPending:  tbTypes.ToUint128(0),
-			DebitsPosted:   tbTypes.ToUint128(0),
-			CreditsPending: tbTypes.ToUint128(0),
-			CreditsPosted:  tbTypes.ToUint128(0),
-			UserID:         tbTypes.ToUint128(0),
+		account := models.Account{
+			UserID:         types.ToUint128(0),
 			Ledger:         ledger,
 			Code:           code,
 			Flags:          flags,
+			DebitsPending:  types.ToUint128(0),
+			DebitsPosted:   types.ToUint128(0),
+			CreditsPending: types.ToUint128(0),
+			CreditsPosted:  types.ToUint128(0),
 		}
+		account.SetID(uint64(1000 + i))
+		accounts[i] = account
 	}
 
 	return writeJSONToFile(accounts, "generated_accounts.json")
