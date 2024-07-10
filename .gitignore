@@ -28,3 +28,7 @@ Thumbs.db
 
 # Don't commit the binary
 tigerbeagle
+
+# Don't commit the migration files
+generated_accounts.json
+generated_transfers.json

@@ -70,18 +70,7 @@ func TestValidateConnectivity(t *testing.T) {
 				}
 			}
 
-			// Check if the mock expectations were met
-			expectationsMet := mockClient.AssertExpectations(t)
-			if !expectationsMet {
-				t.Errorf("Mock expectations were not met")
-			}
-
-			// Print the calls made to the mock
-			calls := mockClient.Calls
-			t.Logf("Number of calls made to mock: %d", len(calls))
-			for i, call := range calls {
-				t.Logf("Call %d: %s", i, call.Method)
-			}
+			mockClient.AssertExpectations(t)
 		})
 	}
 }
@@ -92,13 +81,13 @@ func TestCreateAccount(t *testing.T) {
 
 	// Test successful account creation
 	mockClient.On("CreateAccounts", mock.Anything).Return(nil).Once()
-	err := tb.CreateAccount(1)
+	err := tb.CreateAccount(1, 700, 10, 0)
 	assert.NoError(t, err)
 	mockClient.AssertExpectations(t)
 
 	// Test failed account creation
 	mockClient.On("CreateAccounts", mock.Anything).Return(fmt.Errorf("creation failed")).Once()
-	err = tb.CreateAccount(2)
+	err = tb.CreateAccount(2, 700, 10, 0)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "creation failed")
 	mockClient.AssertExpectations(t)
@@ -110,14 +99,49 @@ func TestTransfer(t *testing.T) {
 
 	// Test successful transfer
 	mockClient.On("CreateTransfers", mock.Anything).Return(nil).Once()
-	err := tb.Transfer(1, 2, 100)
+	err := tb.Transfer(1, 2, 100, 700, 10, 0)
 	assert.NoError(t, err)
 	mockClient.AssertExpectations(t)
 
 	// Test failed transfer
 	mockClient.On("CreateTransfers", mock.Anything).Return(fmt.Errorf("transfer failed")).Once()
-	err = tb.Transfer(3, 4, 200)
+	err = tb.Transfer(3, 4, 200, 700, 10, 0)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "transfer failed")
 	mockClient.AssertExpectations(t)
+}
+
+func TestBulkTransfer(t *testing.T) {
+	mockClient := new(MockClient)
+	tb := &TigerBeagle{client: mockClient}
+
+	// Test successful bulk transfer
+	mockClient.On("CreateTransfers", mock.Anything).Return(nil).Times(3)
+	err := tb.BulkTransfer(3, 1, 2, 100, 700, 10, 0)
+	assert.NoError(t, err)
+	mockClient.AssertExpectations(t)
+
+	// Test failed bulk transfer
+	mockClient.On("CreateTransfers", mock.Anything).Return(nil).Once()
+	mockClient.On("CreateTransfers", mock.Anything).Return(fmt.Errorf("bulk transfer failed")).Once()
+	err = tb.BulkTransfer(2, 3, 4, 200, 700, 10, 0)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "bulk transfer failed")
+	mockClient.AssertExpectations(t)
+}
+
+func TestGenerateAccounts(t *testing.T) {
+	tb := &TigerBeagle{}
+
+	err := tb.GenerateAccounts(5, 700, 10, 0)
+	assert.NoError(t, err)
+
+}
+
+func TestGenerateTransfers(t *testing.T) {
+	tb := &TigerBeagle{}
+
+	err := tb.GenerateTransfers(5, 700, 10, 0)
+	assert.NoError(t, err)
+
 }

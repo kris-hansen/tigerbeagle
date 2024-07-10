@@ -6,6 +6,7 @@ import (
 
 	"github.com/kris-hansen/tigerbeagle/internal/app"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func newTransferCmd(tigerBeagle *app.TigerBeagle) *cobra.Command {
@@ -26,12 +27,15 @@ func newTransferCmd(tigerBeagle *app.TigerBeagle) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("invalid amount: %w", err)
 			}
-			return tigerBeagle.Transfer(debit, credit, amount)
+			ledger := viper.GetUint32("ledger")
+			code := uint16(viper.GetUint32("code"))
+			flags := uint16(viper.GetUint32("flags"))
+			return tigerBeagle.Transfer(debit, credit, amount, ledger, code, flags)
 		},
 	}
 }
 
-func newBulkTransferCmd(tigerBeagle *app.TigerBeagle) *cobra.Command {
+func newBulkTransferCmd(tigerBeagle app.TigerBeagleInterface) *cobra.Command {
 	return &cobra.Command{
 		Use:   "bulk-transfer <debit_account> <credit_account> <amount> <iterations>",
 		Short: "Perform multiple transfers in bulk",
@@ -53,7 +57,12 @@ func newBulkTransferCmd(tigerBeagle *app.TigerBeagle) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("invalid number of iterations: %w", err)
 			}
-			return tigerBeagle.BulkTransfer(iterations, debit, credit, amount)
+
+			ledger := viper.GetUint32("ledger")
+			code := uint16(viper.GetUint32("code"))
+			flags := uint16(viper.GetUint32("flags"))
+
+			return tigerBeagle.BulkTransfer(iterations, debit, credit, amount, ledger, code, flags)
 		},
 	}
 }
