@@ -8,7 +8,7 @@ Project Goals:
 
 - Be a tool to help bridge between TigerBeetle and systems of transactional reference (i.e., transactional metadata)
 - Faciliate mass account / transaction manipulation for conversion, migration and testing
-- Generate test data for ledger testing
+- Generate test data for ledger testing and preparation
 
 ## Table of Contents
 
@@ -36,13 +36,13 @@ Project Goals:
 To install TigerBeagle, you need to have Go 1.16 or later installed on your system. Then, you can install it using the following command:
 
 ```bash
-go install github.com/yourusername/tigerbeagle@latest
+go install github.com/kris-hansen/tigerbeagle@latest
 ```
 
 Alternatively, you can clone the repository and build it manually:
 
 ```bash
-git clone https://github.com/yourusername/tigerbeagle.git
+git clone https://github.com/kris-hansen/tigerbeagle.git
 cd tigerbeagle
 go build
 ```
@@ -80,7 +80,7 @@ tigerbeagle [command] --help
 
 ## Migration Guide
 
-For detailed instructions on migrating accounts and transfers, please refer to our [Migration Guide](MIGRATE.md).
+For detailed instructions on migrating accounts and transfers, please refer to our [Migration Guide](docs/MIGRATE.md).
 
 ## Contributing
 
@@ -94,7 +94,7 @@ We welcome contributions to TigerBeagle! Please feel free to submit issues, fork
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
@@ -103,4 +103,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-For more information, bug reports, or feature requests, please [open an issue](https://github.com/yourusername/tigerbeagle/issues) on GitHub.
+For more information, bug reports, or feature requests, please [open an issue](https://github.com/kris-hansen/tigerbeagle/issues) on GitHub.

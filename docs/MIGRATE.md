@@ -14,30 +14,26 @@ To migrate accounts, prepare a JSON file with an array of account objects. Each 
 ```json
 [
   {
-    "id": "123456789",
-    "debitsPending": "0",
-    "debitsPosted": "0",
-    "creditsPending": "0",
-    "creditsPosted": "0",
-    "userData128": "0",
-    "userData64": 0,
-    "userData32": 0,
-    "ledger": 1,
-    "code": 718,
-    "flags": 1
+    "id": 123456789,
+    "user_id": 0,
+    "ledger": 700,
+    "code": 10,
+    "flags": 0,
+    "debits_pending": 0,
+    "debits_posted": 0,
+    "credits_pending": 0,
+    "credits_posted": 0
   },
   {
-    "id": "987654321",
-    "debitsPending": "0",
-    "debitsPosted": "0",
-    "creditsPending": "0",
-    "creditsPosted": "0",
-    "userData128": "0",
-    "userData64": 0,
-    "userData32": 0,
-    "ledger": 1,
-    "code": 718,
-    "flags": 1
+    "id": 987654321,
+    "user_id": 0,
+    "ledger": 700,
+    "code": 10,
+    "flags": 0,
+    "debits_pending": 0,
+    "debits_posted": 0,
+    "credits_pending": 0,
+    "credits_posted": 0
   }
 ]
 ```
@@ -73,31 +69,31 @@ To migrate transfers, prepare a JSON file with an array of transfer objects. Eac
 ```json
 [
   {
-    "id": "1234567890",
-    "debitAccountId": "123456789",
-    "creditAccountId": "987654321",
-    "amount": "100000",
-    "pendingId": "0",
-    "userData128": "0",
-    "userData64": 0,
-    "userData32": 0,
+    "id": 1234567890,
+    "debit_account_id": 123456789,
+    "credit_account_id": 987654321,
+    "amount": 100000,
+    "pending_id": 0,
+    "user_data_128": 0,
+    "user_data_64": 0,
+    "user_data_32": 0,
     "timeout": 0,
-    "ledger": 1,
-    "code": 1,
+    "ledger": 700,
+    "code": 10,
     "flags": 0
   },
   {
-    "id": "9876543210",
-    "debitAccountId": "987654321",
-    "creditAccountId": "123456789",
-    "amount": "50000",
-    "pendingId": "0",
-    "userData128": "0",
-    "userData64": 0,
-    "userData32": 0,
+    "id": 9876543210,
+    "debit_account_id": 987654321,
+    "credit_account_id": 123456789,
+    "amount": 50000,
+    "pending_id": 0,
+    "user_data_128": 0,
+    "user_data_64": 0,
+    "user_data_32": 0,
     "timeout": 0,
-    "ledger": 1,
-    "code": 1,
+    "ledger": 700,
+    "code": 10,
     "flags": 0
   }
 ]
@@ -131,11 +127,11 @@ tigerbeagle migrate-transfers ./transfers_to_migrate.json
 
 2. It's recommended to migrate accounts before migrating transfers to ensure that all necessary accounts exist in the system.
 
-3. The TigerBeagle tool will provide feedback on the migration process, including any errors or warnings for individual accounts or transfers.
+3. The TigerBeagle tool will provide feedback on the migration process, including any errors or warnings for individual accounts or transfers. If an error occurs during migration, the process will stop and report which batch encountered the error. Successfully migrated batches before the error will remain in the system. You may need to restart the process with a fresh TB database.
 
-4. For large datasets, consider breaking your JSON files into smaller chunks and migrating them in batches to avoid timeouts or memory issues.
+4. For large datasets, tigerbeagle will handle the batching so you don't need to worry about the maximum batch size.
 
-5. Always test the migration process in a non-production environment before applying it to your production system.
+5. Always test the migration process in a non-production environment before applying it to a production system.
 
 6. Make sure to keep backups of your data before starting the migration process.
 
