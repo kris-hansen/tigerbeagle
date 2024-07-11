@@ -116,17 +116,24 @@ func TestBulkTransfer(t *testing.T) {
 	tb := &TigerBeagle{client: mockClient}
 
 	// Test successful bulk transfer
-	mockClient.On("CreateTransfers", mock.Anything).Return(nil).Times(3)
+	mockClient.On("CreateTransfers", mock.AnythingOfType("[]models.Transfer")).Return(nil).Once()
 	err := tb.BulkTransfer(3, 1, 2, 100, 700, 10, 0)
 	assert.NoError(t, err)
 	mockClient.AssertExpectations(t)
 
 	// Test failed bulk transfer
-	mockClient.On("CreateTransfers", mock.Anything).Return(nil).Once()
-	mockClient.On("CreateTransfers", mock.Anything).Return(fmt.Errorf("bulk transfer failed")).Once()
+	mockClient.On("CreateTransfers", mock.AnythingOfType("[]models.Transfer")).Return(fmt.Errorf("bulk transfer failed")).Once()
 	err = tb.BulkTransfer(2, 3, 4, 200, 700, 10, 0)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "bulk transfer failed")
+	mockClient.AssertExpectations(t)
+
+	// Test bulk transfer with more than BATCH_SIZE iterations
+	const BATCH_SIZE = 8189
+	largeIterations := BATCH_SIZE + 10
+	mockClient.On("CreateTransfers", mock.AnythingOfType("[]models.Transfer")).Return(nil).Times(2)
+	err = tb.BulkTransfer(largeIterations, 5, 6, 300, 700, 10, 0)
+	assert.NoError(t, err)
 	mockClient.AssertExpectations(t)
 }
 

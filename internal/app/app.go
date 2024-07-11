@@ -103,8 +103,12 @@ func (t *TigerBeagle) Transfer(debitAccountID, creditAccountID, amount uint64, l
 }
 
 func (t *TigerBeagle) BulkTransfer(iterations int, debitAccountID, creditAccountID, amount uint64, ledger uint32, code uint16, flags uint16) error {
+	const BATCH_SIZE = 8190 // Maximum batch size as per TigerBeetle server default
+
+	// Pre-allocate all transfers
+	allTransfers := make([]models.Transfer, iterations)
 	for i := 0; i < iterations; i++ {
-		transfer := models.Transfer{
+		allTransfers[i] = models.Transfer{
 			ID:              tbTypes.ToUint128(uint64(time.Now().UnixNano()) + uint64(i)),
 			DebitAccountID:  tbTypes.ToUint128(debitAccountID),
 			CreditAccountID: tbTypes.ToUint128(creditAccountID),
@@ -113,20 +117,31 @@ func (t *TigerBeagle) BulkTransfer(iterations int, debitAccountID, creditAccount
 			Code:            code,
 			Flags:           flags,
 		}
-
-		err := t.client.CreateTransfers([]models.Transfer{transfer})
-		if err != nil {
-			return fmt.Errorf("error creating transfer in iteration %d: %w", i, err)
-		}
-
-		fmt.Printf("Transfer %d completed: %d from account %d to account %d (Ledger: %d, Code: %d, Flags: %d)\n",
-			i+1, amount, debitAccountID, creditAccountID, ledger, code, flags)
 	}
 
+	// Process transfers in batches
+	for i := 0; i < len(allTransfers); i += BATCH_SIZE {
+		end := i + BATCH_SIZE
+		if end > len(allTransfers) {
+			end = len(allTransfers)
+		}
+		batch := allTransfers[i:end]
+
+		err := t.client.CreateTransfers(batch)
+		if err != nil {
+			return fmt.Errorf("error creating transfers in batch %d-%d: %w", i, end-1, err)
+		}
+
+		fmt.Printf("Processed transfers %d-%d\n", i, end-1)
+	}
+
+	fmt.Printf("All %d transfers completed successfully\n", iterations)
 	return nil
 }
 
 func (t *TigerBeagle) MigrateAccounts(filename string) error {
+	const BATCH_SIZE = 8190 // Maximum batch size as per TigerBeetle server default
+
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("error reading file: %w", err)
@@ -137,12 +152,23 @@ func (t *TigerBeagle) MigrateAccounts(filename string) error {
 		return fmt.Errorf("error parsing JSON: %w", err)
 	}
 
-	err = t.client.CreateAccounts(accounts)
-	if err != nil {
-		return fmt.Errorf("error creating accounts: %w", err)
+	// Process accounts in batches
+	for i := 0; i < len(accounts); i += BATCH_SIZE {
+		end := i + BATCH_SIZE
+		if end > len(accounts) {
+			end = len(accounts)
+		}
+		batch := accounts[i:end]
+
+		err = t.client.CreateAccounts(batch)
+		if err != nil {
+			return fmt.Errorf("error creating accounts in batch %d-%d: %w", i, end-1, err)
+		}
+
+		fmt.Printf("Processed accounts %d-%d\n", i, end-1)
 	}
 
-	fmt.Printf("Successfully migrated %d accounts\n", len(accounts))
+	fmt.Printf("Successfully migrated all %d accounts\n", len(accounts))
 	return nil
 }
 
