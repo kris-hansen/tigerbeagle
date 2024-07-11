@@ -4,6 +4,34 @@
 
 TigerBeagle is a CLI tool designed to simplify account and transaction data management for [TigerBeetle](https://github.com/tigerbeetle/tigerbeetle), the high-performance distributed database engine.
 
+```bash 
+TigerBeagle is a CLI tool for TigerBeetle ledger data management
+
+Usage:
+  tigerbeagle [command]
+
+Available Commands:
+  bulk-transfer     Perform multiple transfers in bulk
+  completion        Generate the autocompletion script for the specified shell
+  create-account    Create a new account
+  doctor            Validate the connectivity to TigerBeetle
+  generate          Generate sample JSON files for accounts or transfers
+  get-account       Get account details
+  help              Help about any command
+  migrate-accounts  Migrate accounts from a JSON file
+  migrate-transfers Migrate transfers from a JSON file
+  transfer          Transfer funds between accounts
+
+Flags:
+      --code uint16         Account/Transfer code (default 10)
+      --flags uint16        Account/Transfer flags
+  -h, --help                help for tigerbeagle
+      --ledger uint32       Ledger ID (default 700)
+      --tb-address string   TigerBeetle address (default "3000")
+
+Use "tigerbeagle [command] --help" for more information about a command.
+```
+
 Project Goals:
 
 - Be a tool to help bridge between TigerBeetle and systems of transactional reference (i.e., transactional metadata)
